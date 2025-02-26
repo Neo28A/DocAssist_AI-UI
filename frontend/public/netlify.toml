@@ -7,6 +7,6 @@
 # Redirect API Calls to Flask Backend
 [[redirects]]
   from = "/api/*"
-  to = "https://your-flask-backend.onrender.com/api/:splat"
+  to = "https://docassist-ai-ui.onrender.com/api/:splat"
   status = 200
   force = true
