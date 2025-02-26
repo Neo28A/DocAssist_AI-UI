@@ -4,41 +4,34 @@ import numpy as np
 from werkzeug.utils import secure_filename
 import os
 import PyPDF2
-import joblib
+import pickle
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, RobustScaler
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
-
-# Configure upload folder
+CORS(app)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
 
-# Create uploads directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-import joblib
-import os
+# Load global objects (model, scaler, and label encoder)
 
-# Get the correct model path
 backend_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(backend_dir, "best_model_xgb.pkl")
+model_path = os.path.join(backend_dir, "xgboost_model.sav")
+scaler_path = os.path.join(backend_dir, "scaler.pkl")
+label_encoder_sex_path = os.path.join(backend_dir, "label_encoder_sex.pkl")
 
 try:
-    model = joblib.load(model_path)  # Load using joblib
-    print("Model loaded successfully!")
+    model = pickle.load(open(model_path, 'rb'))
+    scaler = pickle.load(open(scaler_path, 'rb'))
+    label_encoder_sex = pickle.load(open(label_encoder_sex_path, 'rb'))
+    print("Global objects loaded successfully!")
 except Exception as e:
-    print(f"Error loading model: {str(e)}")
+    print(f"Error loading global objects: {str(e)}")
     model = None
-
-
 
 
 def allowed_file(filename):
@@ -50,34 +43,22 @@ def extract_features_from_pdf(pdf_path):
         text = ""
         for page in reader.pages:
             text += page.extract_text()
-
-    # Split text into lines
     lines = text.split('\n')
-
-    # Extract header and data
     header_line = None
     data_line = None
-
     for line in lines:
-        # Make case-insensitive comparison
         if "hematocrit" in line.lower() and "sex" in line.lower():
             header_line = line
         elif header_line and any(char.isdigit() for char in line):
             data_line = line
             break
-
     if header_line and data_line:
-        # Clean and split into values
         headers = header_line.split()
         values = data_line.split()
-
         if len(headers) == len(values):
-            # Create case-insensitive mapping
             extracted_data = {}
             for header, value in zip(headers, values):
                 extracted_data[header.upper()] = value
-            
-            # Define feature mappings (common variations of names)
             feature_mappings = {
                 'Hematocrit': ['HEMATOCRIT', 'HCT'],
                 'Hemoglobin': ['HEMOGLOBIN', 'HGB', 'HB'],
@@ -90,11 +71,8 @@ def extract_features_from_pdf(pdf_path):
                 'Age': ['AGE'],
                 'Sex': ['SEX']
             }
-            
-            # Extract features using mappings
             features = []
             normalized_data = {}
-            
             for feature, aliases in feature_mappings.items():
                 value = None
                 for alias in aliases:
@@ -102,17 +80,12 @@ def extract_features_from_pdf(pdf_path):
                         value = extracted_data[alias]
                         normalized_data[feature] = value
                         break
-                
                 if value is None:
-                    print(f"Missing feature: {feature}")
-                    print("Available features:", extracted_data.keys())
                     raise ValueError(f"Missing required feature: {feature}")
-                
                 try:
                     features.append(float(value))
                 except ValueError:
                     raise ValueError(f"Invalid value for {feature}: {value}")
-            
             return features, normalized_data
         else:
             raise ValueError("Mismatch between header and data columns.")
@@ -120,19 +93,16 @@ def extract_features_from_pdf(pdf_path):
         raise ValueError("Could not locate headers or data in the PDF.")
 
 def analyze_blood_report(features):
+    # Your analysis logic here...
     results = {
         'conditions': [],
         'findings': [],
         'treatments': []
     }
-    
-    # Anemia Analysis
     if features['Hemoglobin'] < 12 and features['Hematocrit'] < 36:
         if features['Mcv'] < 80:
             results['conditions'].append("Microcytic Anemia")
-            results['findings'].append(
-                "Low hemoglobin, hematocrit, and MCV indicate iron deficiency anemia"
-            )
+            results['findings'].append("Low hemoglobin, hematocrit, and MCV indicate iron deficiency anemia")
             results['treatments'].extend([
                 "Prescribe iron supplements (ferrous sulfate 325mg oral daily)",
                 "Dietary modifications: increase iron-rich foods",
@@ -140,78 +110,38 @@ def analyze_blood_report(features):
             ])
         elif features['Mcv'] > 100:
             results['conditions'].append("Macrocytic Anemia")
-            results['findings'].append(
-                "Low hemoglobin with high MCV suggests vitamin B12 or folate deficiency"
-            )
+            results['findings'].append("Low hemoglobin with high MCV suggests vitamin B12 or folate deficiency")
             results['treatments'].extend([
                 "Vitamin B12 injections or oral supplements",
                 "Folic acid supplementation",
                 "Dietary counseling for B12 and folate-rich foods"
             ])
-    
-    # Add other conditions as in your code...
-    # Infection/Inflammation Analysis
     if features['Leucocyte'] > 11:
         results['conditions'].append("Leukocytosis")
-        results['findings'].append(
-            "Elevated white blood cell count indicates possible infection or inflammation"
-        )
+        results['findings'].append("Elevated white blood cell count indicates possible infection or inflammation")
         results['treatments'].extend([
             "Further testing to identify infection source",
             "Consider CBC with differential",
             "Possible antibiotic therapy based on infection source"
         ])
-    
     return results
 
 def generate_report(analysis_results, feature_dict):
     report = "BLOOD ANALYSIS REPORT\n\n"
-    
     if analysis_results['conditions']:
         report += "Identified Conditions:\n"
         for condition in analysis_results['conditions']:
             report += f"• <span class='text-danger'>{condition}</span>\n"
-        
         report += "\nClinical Findings:\n"
         for finding in analysis_results['findings']:
-            # Add values for hemoglobin, hematocrit, and MCV findings
-            if "hemoglobin" in finding.lower():
-                report += f"• <span class='text-danger'>{finding}</span>\n  Values:\n"
-                report += f"  - Hemoglobin: <span class='text-danger'>{feature_dict['Hemoglobin']:.1f} g/dL</span> (Normal: 12-16 g/dL)\n"
-                report += f"  - Hematocrit: <span class='text-danger'>{feature_dict['Hematocrit']:.1f}%</span> (Normal: 36-48%)\n"
-                report += f"  - MCV: <span class='text-danger'>{feature_dict['Mcv']:.1f} fL</span> (Normal: 80-100 fL)\n"
-            # Add values for leucocyte findings
-            elif "white blood cell" in finding.lower():
-                report += f"• <span class='text-danger'>{finding}</span>\n  Values:\n"
-                report += f"  - Leucocyte: <span class='text-danger'>{feature_dict['Leucocyte']:.1f} x10^9/L</span> (Normal: 4-11 x10^9/L)\n"
-            # Add values for thrombocyte findings
-            elif "platelet" in finding.lower():
-                report += f"• <span class='text-danger'>{finding}</span>\n  Values:\n"
-                report += f"  - Thrombocyte: <span class='text-danger'>{feature_dict['Thrombocyte']:.1f} x10^9/L</span> (Normal: 150-450 x10^9/L)\n"
-            else:
-                report += f"• <span class='text-danger'>{finding}</span>\n"
-        
+            report += f"• <span class='text-danger'>{finding}</span>\n"
         report += "\nTreatment Recommendations:\n"
         for treatment in analysis_results['treatments']:
             report += f"• {treatment}\n"
     else:
-        return generate_normal_report(feature_dict)
-    
-    return report
-
-def generate_normal_report(feature_dict):
-    report = "BLOOD ANALYSIS REPORT\n\n"
-    report += "Identified Conditions:\n"
-    report += "• <span class='text-success'>No abnormal conditions detected</span>\n\n"
-    
-    report += "Clinical Findings:\n"
-    report += "• <span class='text-success'>All blood parameters are within normal ranges</span>\n\n"
-    
-    report += "Treatment Recommendations:\n"
-    report += "• Maintain current health status\n"
-    report += "• Continue regular exercise and balanced diet\n"
-    report += "• Schedule routine follow-up in 12 months\n"
-    
+        report += "Identified Conditions:\n• <span class='text-success'>No abnormal conditions detected</span>\n\n"
+        report += "Clinical Findings:\n• <span class='text-success'>All blood parameters are within normal ranges</span>\n\n"
+        report += "Treatment Recommendations:\n• Maintain current health status\n• Continue regular exercise and balanced diet\n• Schedule routine follow-up in 12 months\n"
     return report
 
 @app.route('/predict', methods=['POST'])
@@ -219,30 +149,22 @@ def predict():
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
-            
         file = request.files['file']
         if file.filename == '':
             return jsonify({"error": "No file selected"}), 400
-            
         if not allowed_file(file.filename):
             return jsonify({"error": "Invalid file type"}), 400
-
         if model is None:
             return jsonify({"error": "Model not loaded"}), 500
 
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filename_uploaded = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename_uploaded)
         file.save(filepath)
 
         try:
             features, extracted_values = extract_features_from_pdf(filepath)
-            prediction = model.predict([features])[0]
-            
-            # Print debug information
-            print("Extracted Features:", features)
-            print("Prediction:", prediction)
-            
-            feature_dict = {
+            # Create a raw feature dictionary for report generation
+            raw_feature_dict = {
                 'Hematocrit': float(features[0]),
                 'Hemoglobin': float(features[1]),
                 'Erythrocyte': float(features[2]),
@@ -252,32 +174,51 @@ def predict():
                 'Mchc': float(features[6]),
                 'Mcv': float(features[7]),
                 'Age': float(features[8]),
-                'Sex': float(features[9])
+                'Sex': extracted_values['Sex']
             }
-            
-            if prediction == 1:
-                analysis = analyze_blood_report(feature_dict)
-                detailed_report = generate_report(analysis, feature_dict)
+
+            # Prepare a DataFrame for prediction
+            new_data = pd.DataFrame({
+                'HAEMATOCRIT': [raw_feature_dict['Hematocrit']],
+                'HAEMOGLOBINS': [raw_feature_dict['Hemoglobin']],
+                'ERYTHROCYTE': [raw_feature_dict['Erythrocyte']],
+                'LEUCOCYTE': [raw_feature_dict['Leucocyte']],
+                'THROMBOCYTE': [raw_feature_dict['Thrombocyte']],
+                'MCH': [raw_feature_dict['Mch']],
+                'MCHC': [raw_feature_dict['Mchc']],
+                'MCV': [raw_feature_dict['Mcv']],
+                'AGE': [raw_feature_dict['Age']],
+                'SEX': [raw_feature_dict['Sex']]
+            })
+
+            # Use the loaded label encoder and scaler to transform the data
+            new_data['SEX'] = label_encoder_sex.transform(new_data['SEX'])
+            numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
+                                'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
+            new_data[numeric_cols_new] = scaler.transform(new_data[numeric_cols_new])
+
+            prediction = model.predict(new_data)[0]
+            print("Extracted Features:", features)
+            print("Prediction:", prediction)
+
+            if prediction == 0:
+                analysis = analyze_blood_report(raw_feature_dict)
+                detailed_report = generate_report(analysis, raw_feature_dict)
             else:
-                detailed_report = generate_normal_report(feature_dict)
-            
+                detailed_report = generate_report({"conditions": [], "findings": [], "treatments": []}, raw_feature_dict)
+
             return jsonify({
                 "status": "success",
-                "prediction": "Yes" if prediction == 1 else "No",
+                "prediction": "in" if prediction == 0 else "out",
                 "detailed_analysis": detailed_report
             })
 
         except Exception as e:
-            print("Extraction Error:", str(e))
-            response_data = {
-                "status": "error",
-                "error": f"Feature extraction failed: {str(e)}"
-            }
+            print("Extraction/Predict Error:", str(e))
+            return jsonify({"status": "error", "error": str(e)})
         finally:
             if os.path.exists(filepath):
                 os.remove(filepath)
-            
-        return jsonify(response_data)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -286,31 +227,51 @@ def predict():
 def predict_manual():
     try:
         data = request.json
-        features = [
-            float(data['Hematocrit']),
-            float(data['Hemoglobin']),
-            float(data['Erythrocyte']),
-            float(data['Leucocyte']),
-            float(data['Thrombocyte']),
-            float(data['Mch']),
-            float(data['Mchc']),
-            float(data['Mcv']),
-            float(data['Age']),
-            float(data['Sex'])
-        ]
 
-        prediction = model.predict([features])[0]
-        print("Prediction:", prediction)  # Debug print
+        new_data = pd.DataFrame({
+            'HAEMATOCRIT': [float(data['Hematocrit'])],
+            'HAEMOGLOBINS': [float(data['Hemoglobin'])],
+            'ERYTHROCYTE': [float(data['Erythrocyte'])],
+            'LEUCOCYTE': [float(data['Leucocyte'])],
+            'THROMBOCYTE': [float(data['Thrombocyte'])],
+            'MCH': [float(data['Mch'])],
+            'MCHC': [float(data['Mchc'])],
+            'MCV': [float(data['Mcv'])],
+            'AGE': [float(data['Age'])],
+            'SEX': [data['Sex']]
+        })
 
-        if prediction == 1:
-            analysis = analyze_blood_report(data)
-            detailed_report = generate_report(analysis, data)
+        # Use the loaded label encoder and scaler
+        new_data['SEX'] = label_encoder_sex.transform(new_data['SEX'])
+        numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
+                            'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
+        new_data[numeric_cols_new] = scaler.transform(new_data[numeric_cols_new])
+
+        prediction = model.predict(new_data)[0]
+        print("Manual Prediction:", prediction)
+
+        feature_dict = {
+            'Hematocrit': new_data['HAEMATOCRIT'].iloc[0],
+            'Hemoglobin': new_data['HAEMOGLOBINS'].iloc[0],
+            'Erythrocyte': new_data['ERYTHROCYTE'].iloc[0],
+            'Leucocyte': new_data['LEUCOCYTE'].iloc[0],
+            'Thrombocyte': new_data['THROMBOCYTE'].iloc[0],
+            'Mch': new_data['MCH'].iloc[0],
+            'Mchc': new_data['MCHC'].iloc[0],
+            'Mcv': new_data['MCV'].iloc[0],
+            'Age': new_data['AGE'].iloc[0],
+            'Sex': new_data['SEX'].iloc[0]
+        }
+
+        if prediction == 0:
+            analysis = analyze_blood_report(feature_dict)
+            detailed_report = generate_report(analysis, feature_dict)
         else:
-            detailed_report = generate_normal_report(data)
-            
+            detailed_report = generate_report({"conditions": [], "findings": [], "treatments": []}, feature_dict)
+
         return jsonify({
             "status": "success",
-            "prediction": "Yes" if prediction == 1 else "No",
+            "prediction": "in" if prediction == 0 else "out",
             "detailed_analysis": detailed_report
         })
 
@@ -318,4 +279,4 @@ def predict_manual():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    app.run(debug=True, port=5000)

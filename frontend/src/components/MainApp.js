@@ -52,7 +52,7 @@ function MainApp() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('https://docassist-ai-ui.onrender.com/predict', {
+      const response = await fetch('http://127.0.0.1:5000/predict', {
         method: 'POST',
         body: formData,
       });
@@ -81,7 +81,7 @@ function MainApp() {
     setDisplayedContent('');
 
     try {
-      const response = await fetch('https://docassist-ai-ui.onrender.com/predict_manual', {
+      const response = await fetch('http://127.0.0.1:5000/predict_manual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -427,12 +427,9 @@ function MainApp() {
                   <div className="input-group">
                     <label>Sex (1 for Male, 0 for Female)</label>
                     <input
-                      type="number"
-                      min="0"
-                      max="1"
-                      step="1"
+                      type="text"
                       name="Sex"
-                      placeholder="1 for Male, 0 for Female"
+                      placeholder="M for Male, F for Female"
                       value={manualInputs.Sex}
                       onChange={handleInputChange}
                       onKeyPress={(e) => handleKeyPress(e, 'Sex')}
