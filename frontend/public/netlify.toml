@@ -1,0 +1,12 @@
+# React Router Support (if needed)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Redirect API Calls to Flask Backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-flask-backend.onrender.com/api/:splat"
+  status = 200
+  force = true

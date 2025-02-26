@@ -1,0 +1,917 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body {
+  background: #000000;
+}
+
+.landing-container {
+  min-height: 100vh;
+  background: #000000;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.nav-bar {
+  height: 50px;
+  background: rgba(18, 18, 18, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: fixed;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 20px;
+  width: 60%;
+  max-width: 900px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1000px;
+  padding: 0 1rem;
+}
+
+.nav-center {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #007AFF;
+}
+
+.nav-link.active {
+  color: #007AFF;
+  background: none;
+  text-shadow: none;
+}
+
+.landing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: auto;
+  padding: 14rem 2rem 2rem;
+  text-align: center;
+}
+
+.hero-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.landing-title {
+  font-size: 4.5rem;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(to right, #ffffff, #007AFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeInUp 0.8s ease-out;
+  text-shadow: none;
+}
+
+.landing-subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.get-started-btn {
+  position: relative;
+  background: #007AFF;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  color: white;
+}
+
+.get-started-btn::after {
+  display: none;
+}
+
+.learn-more-btn {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.learn-more-btn .arrow {
+  display: inline-block;
+}
+
+.learn-more-btn:hover .arrow {
+  transform: none;
+}
+
+.learn-more-btn:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.features-section {
+  width: 100%;
+  background: #000000;
+  padding: 0 2rem 4rem;
+  margin-top: -4rem;
+  position: relative;
+  z-index: 1;
+  scroll-margin-top: 80px;
+}
+
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.feature-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 122, 255, 0.30);
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.feature-card::before {
+  display: none;
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.feature-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: #007AFF;
+}
+
+.feature-content {
+  position: relative;
+  z-index: 1;
+}
+
+.feature-content h3 {
+  font-size: 1.25rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.feature-content p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .landing-title {
+    font-size: 3.5rem;
+  }
+  
+  .feature-cards {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 800px;
+  }
+  .features-section {
+    padding: 0.5rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-title {
+    font-size: 2.5rem;
+  }
+  
+  .feature-cards {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .features-section {
+    padding: 0.5rem;
+  }
+}
+
+/* Add these animations to your existing LandingPage.css */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add hover effect to the arrow */
+.get-started-btn .arrow {
+  transition: transform 0.3s ease;
+}
+
+.get-started-btn:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* Add subtle gradient animation to feature cards */
+.feature-card {
+  transition: none;
+}
+
+/* Update the circuit background styles */
+.circuit-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+  opacity: 0.4;
+}
+
+.circuit-line {
+  position: absolute;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(0, 122, 255, 0.05),
+    rgba(0, 122, 255, 0.05),
+    transparent
+  );
+}
+
+.circuit-line.horizontal {
+  height: 1px;
+  width: 100%;
+  animation: moveHorizontal 15s linear infinite;
+}
+
+.circuit-line.horizontal:nth-child(1) {
+  top: 30%;
+  animation-delay: -5s;
+}
+
+.circuit-line.horizontal:nth-child(2) {
+  top: 70%;
+  animation-delay: -2s;
+}
+
+.circuit-line.vertical {
+  width: 1px;
+  height: 100%;
+  animation: moveVertical 15s linear infinite;
+}
+
+.circuit-line.vertical:nth-child(3) {
+  left: 30%;
+  animation-delay: -7s;
+}
+
+.circuit-line.vertical:nth-child(4) {
+  left: 70%;
+  animation-delay: -3s;
+}
+
+.circuit-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 122, 255, 0.15);
+  border-radius: 50%;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.circuit-dot:nth-child(5) {
+  top: 30%;
+  left: 30%;
+  animation-delay: -1s;
+}
+
+.circuit-dot:nth-child(6) {
+  top: 70%;
+  left: 70%;
+  animation-delay: -2s;
+}
+
+.circuit-dot:nth-child(7) {
+  top: 30%;
+  left: 70%;
+  animation-delay: -3s;
+}
+
+@keyframes moveHorizontal {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes moveVertical {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* Add these new styles to your existing LandingPage.css */
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  animation: fadeInUp 0.8s ease-out 0.4s backwards;
+}
+
+.view-format-btn {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  background: transparent;
+  color: #007AFF;
+  border: 2px solid #007AFF;
+  padding: 0.9rem 2.2rem;
+  font-size: 1rem;
+  border-radius: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.3px;
+  transition: none;
+}
+
+.view-format-btn:hover {
+  background: transparent;
+  transform: none;
+}
+
+.view-format-btn .arrow {
+  transition: transform 0.3s ease;
+}
+
+.view-format-btn:hover .arrow {
+  transform: translateY(5px);
+}
+
+.format-section {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8rem 2rem;
+  scroll-margin-top: calc(50vh - 50%);
+}
+
+.format-title {
+  font-size: 2.2rem;
+  color: #ffffff;
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.format-content {
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+  justify-content: center;
+}
+
+.format-text {
+  flex: 0 0 350px;
+  text-align: left;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  justify-content: center;
+  min-height: 200px;
+  margin-right: -2rem;
+}
+
+.format-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  animation: fadeInUp 0.8s ease-out 0.2s backwards;
+  position: relative;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.format-description::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #007AFF;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.format-image-container {
+  flex: 0 0 650px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(0, 122, 255, 0.2);
+  animation: fadeInUp 0.8s ease-out 0.4s backwards;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.format-image-container::after {
+  display: none;
+}
+
+.format-image-container:hover {
+  background-position: right center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2px rgba(0, 122, 255, 0.3);
+  border-color: rgba(0, 122, 255, 0.3);
+}
+
+.format-image-container:hover::after {
+  transform: translateX(100%);
+}
+
+.format-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: white;
+  border-radius: 4px;
+}
+
+@media (max-width: 1200px) {
+  .format-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .format-text {
+    flex: 0 0 auto;
+    text-align: center;
+    max-width: 500px;
+    min-height: auto;
+  }
+
+  .format-image-container {
+    flex: 0 0 auto;
+    max-width: 550px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .format-content {
+    padding: 0 1rem;
+  }
+  
+  .format-image-container {
+    max-width: 100%;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-height: 800px) {
+  .landing-content {
+    min-height: 100vh;
+  }
+
+  .format-section {
+    min-height: auto;
+  }
+}
+
+/* Add these styles for the nav brand */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: none;
+  text-shadow: none;
+  border-radius: 0;
+}
+
+.nav-brand:hover {
+  background: none;
+}
+
+.nav-logo {
+  width: 20px;
+  height: 20px;
+  stroke: #007AFF;
+}
+
+.nav-brand-text {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: initial;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+}
+
+/* Update existing nav styles */
+.nav-links:first-child {
+  gap: 2rem; /* Slightly larger gap for the left side */
+}
+
+/* Update nav-brand styles to show it's clickable */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: none;
+  text-shadow: none;
+  border-radius: 0;
+}
+
+.nav-brand:hover {
+  background: none;
+}
+
+/* Update nav-link styles to show Format is clickable */
+.nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #007AFF;
+}
+
+/* Add these new footer styles */
+.footer {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  padding: 4rem 2rem 1rem;
+  margin-top: 0;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 4rem;
+}
+
+.footer-left {
+  flex: 1;
+  max-width: 400px;
+}
+
+.footer-right {
+  display: flex;
+  gap: 6rem; /* Increased gap between Quick Links and Contact */
+  margin-left: auto; /* Push to the right end */
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.footer-logo {
+  width: 24px;
+  height: 24px;
+  stroke: #007AFF;
+}
+
+.footer-description {
+  color: #b3b3b3;
+  max-width: 300px;
+  line-height: 1.6;
+}
+
+.footer-links {
+  display: flex;
+  gap: 6rem;
+}
+
+.footer-links-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 120px; /* Ensure minimum width for columns */
+}
+
+.footer-links-column h4 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.footer-links-column span,
+.footer-links-column a {
+  color: #b3b3b3;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.footer-links-column span:hover,
+.footer-links-column a:hover {
+  color: #007AFF;
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 4rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: #b3b3b3;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .footer-right {
+    margin-left: 0;
+    gap: 2rem;
+  }
+
+  .footer-links {
+    gap: 2rem;
+  }
+}
+
+/* Add these new styles for the footer divider and social links */
+.footer-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 4rem;
+  width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footer-social {
+  margin-top: 2rem;
+}
+
+.footer-social h4 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.footer-social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer-social-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.footer-social-links a:hover {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: #007AFF;
+}
+
+.footer-social-links svg {
+  width: 20px;
+  height: 20px;
+  stroke: #b3b3b3;
+  transition: all 0.3s ease;
+}
+
+.footer-social-links a:hover svg {
+  stroke: #007AFF;
+}
+
+/* Update the footer top margin to account for the divider */
+.footer {
+  padding-top: 0;  /* Remove top padding since we have the divider */
+}
+
+/* Update nav button */
+.nav-bar .get-started-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
+.get-started-btn:hover {
+  background: #0A84FF;
+  transform: none;
+}
+
+/* Reset button hover effects */
+.get-started-btn:hover {
+  background: #007AFF; /* Keep the same color, no change on hover */
+}
+
+.learn-more-btn:hover {
+  background: rgba(0, 0, 0, 0.3); /* Keep the same background */
+  border-color: rgba(255, 255, 255, 0.2); /* Keep the same border */
+}
+
+/* Remove transform effect from nav button */
+.nav-bar .get-started-btn:hover {
+  background: #007AFF;
+  transform: none;
+}
+
+/* Remove arrow hover effect */
+.get-started-btn .arrow {
+  transition: none;
+}
+
+.get-started-btn:hover .arrow {
+  transform: none;
+}
+
+.features-title {
+  font-size: 2.2rem;
+  color: #ffffff;
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.format-title {
+  font-size: 2.2rem;
+  color: #ffffff;
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@media (max-width: 1200px) {
+  .footer-divider {
+    width: 100%;
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+}
+
+/* Remove the problematic commented-out section at the end and replace with proper hover state
+.feature-card:hover {
+  border-color: rgba(0, 122, 255, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}  */
