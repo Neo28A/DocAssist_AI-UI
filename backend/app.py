@@ -19,16 +19,26 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load global objects (model, scaler, and label encoder)
 
+# ... existing imports ...
+
+# Update the model paths to point to the models folder
 backend_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(backend_dir, "xgboost_model.sav")
-scaler_path = os.path.join(backend_dir, "scaler.pkl")
-label_encoder_sex_path = os.path.join(backend_dir, "label_encoder_sex.pkl")
+models_dir = os.path.join(backend_dir, "models")
+model_path = os.path.join(models_dir, "xgboost_model.sav")
+scaler_path = os.path.join(models_dir, "scaler.pkl")
+label_encoder_sex_path = os.path.join(models_dir, "label_encoder_sex.pkl")
+
+# Ensure models directory exists
+os.makedirs(models_dir, exist_ok=True)
 
 try:
-    model = pickle.load(open(model_path, 'rb'))
-    scaler = pickle.load(open(scaler_path, 'rb'))
-    label_encoder_sex = pickle.load(open(label_encoder_sex_path, 'rb'))
-    print("Global objects loaded successfully!")
+    with open(model_path, 'rb') as f:
+        model = pickle.load(f)
+    with open(scaler_path, 'rb') as f:
+        scaler = pickle.load(f)
+    with open(label_encoder_sex_path, 'rb') as f:
+        label_encoder_sex = pickle.load(f)
+    print("Global objects loaded successfully from models directory!")
 except Exception as e:
     print(f"Error loading global objects: {str(e)}")
     model = None
