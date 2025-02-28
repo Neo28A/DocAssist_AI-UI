@@ -88,14 +88,26 @@ def extract_features_from_pdf(pdf_path):
                 for alias in aliases:
                     if alias in extracted_data:
                         value = extracted_data[alias]
+                        # Special handling for Sex field
+                        if feature == 'Sex':
+                            # Convert numeric values to M/F
+                            if value in ['1', '1.0']:
+                                value = 'M'
+                            elif value in ['0', '0.0']:
+                                value = 'F'
+                            # Validate M/F values
+                            if value not in ['M', 'F']:
+                                raise ValueError(f"Invalid value for Sex: {value}. Must be M, F, 1, or 0")
+                            features.append(1 if value == 'M' else 0)  # Convert back to numeric for model
+                        else:
+                            try:
+                                features.append(float(value))
+                            except ValueError:
+                                raise ValueError(f"Invalid value for {feature}: {value}")
                         normalized_data[feature] = value
                         break
                 if value is None:
                     raise ValueError(f"Missing required feature: {feature}")
-                try:
-                    features.append(float(value))
-                except ValueError:
-                    raise ValueError(f"Invalid value for {feature}: {value}")
             return features, normalized_data
         else:
             raise ValueError("Mismatch between header and data columns.")
@@ -103,55 +115,146 @@ def extract_features_from_pdf(pdf_path):
         raise ValueError("Could not locate headers or data in the PDF.")
 
 def analyze_blood_report(features):
-    # Your analysis logic here...
+    # Rule-based treatment recommendation system
     results = {
         'conditions': [],
         'findings': [],
         'treatments': []
     }
+    
+    # Anemia evaluation
     if features['Hemoglobin'] < 12 and features['Hematocrit'] < 36:
+        # Microcytic anemia
         if features['Mcv'] < 80:
             results['conditions'].append("Microcytic Anemia")
-            results['findings'].append("Low hemoglobin, hematocrit, and MCV indicate iron deficiency anemia")
+            results['findings'].append("Low hemoglobin, hematocrit, and MCV suggest iron deficiency anemia")
             results['treatments'].extend([
                 "Prescribe iron supplements (ferrous sulfate 325mg oral daily)",
-                "Dietary modifications: increase iron-rich foods",
-                "Follow-up blood test in 3 months"
+                "Recommend dietary modifications to increase iron-rich foods",
+                "Schedule follow-up blood test in 3 months"
             ])
+        # Macrocytic anemia
         elif features['Mcv'] > 100:
             results['conditions'].append("Macrocytic Anemia")
             results['findings'].append("Low hemoglobin with high MCV suggests vitamin B12 or folate deficiency")
             results['treatments'].extend([
-                "Vitamin B12 injections or oral supplements",
-                "Folic acid supplementation",
-                "Dietary counseling for B12 and folate-rich foods"
+                "Initiate vitamin B12 injections or oral supplementation",
+                "Begin folic acid supplementation",
+                "Provide dietary counseling for vitamin B12 and folate-rich foods"
             ])
+        else:
+            # Normocytic anemia
+            results['conditions'].append("Normocytic Anemia")
+            results['findings'].append("Low hemoglobin and hematocrit with normal MCV may indicate acute blood loss or chronic disease")
+            results['treatments'].extend([
+                "Conduct further evaluation to determine underlying cause",
+                "Consider additional tests (iron studies, reticulocyte count, kidney function)"
+            ])
+    
+    # Leukocytosis evaluation
     if features['Leucocyte'] > 11:
         results['conditions'].append("Leukocytosis")
         results['findings'].append("Elevated white blood cell count indicates possible infection or inflammation")
         results['treatments'].extend([
-            "Further testing to identify infection source",
-            "Consider CBC with differential",
-            "Possible antibiotic therapy based on infection source"
+            "Perform further testing to identify the source of infection",
+            "Order a CBC with differential",
+            "Consider initiating antibiotic therapy based on clinical findings"
         ])
+    
+    # Thrombocytosis evaluation
+    if features['Thrombocyte'] > 450:
+        results['conditions'].append("Thrombocytosis")
+        results['findings'].append("High platelet count may be reactive or suggest a myeloproliferative disorder")
+        results['treatments'].extend([
+            "Repeat platelet count and check inflammatory markers",
+            "Evaluate for underlying causes; refer to hematology if persistent"
+        ])
+    
+    # Polycythemia evaluation
+    if features['Hematocrit'] > 52 and features['Hemoglobin'] > 18:
+        results['conditions'].append("Polycythemia")
+        results['findings'].append("Elevated hemoglobin and hematocrit may indicate polycythemia vera or secondary polycythemia")
+        results['treatments'].extend([
+            "Conduct JAK2 mutation analysis",
+            "Consider therapeutic phlebotomy",
+            "Evaluate need for cytoreductive therapy (e.g., hydroxyurea) in selected cases"
+        ])
+    
+    # MCHC-based red cell evaluation
+    if features['Mchc'] < 32:
+        results['conditions'].append("Hypochromia")
+        results['findings'].append("Low MCHC indicates reduced hemoglobin content per cell, common in iron deficiency anemia")
+        results['treatments'].extend([
+            "Recommend iron supplementation",
+            "Advise dietary modifications to boost iron intake",
+            "Plan for follow-up evaluation of red cell indices"
+        ])
+    elif features['Mchc'] > 36:
+        results['conditions'].append("Hyperchromia")
+        results['findings'].append("Elevated MCHC is unusual and may be seen in conditions like hereditary spherocytosis")
+        results['treatments'].extend([
+            "Consider osmotic fragility testing",
+            "Refer to hematology for further evaluation"
+        ])
+    
+    # Age-related note
+    if features['Age'] > 65:
+        results['findings'].append("Patient is elderly; consider age-related changes in blood parameters and higher risk for chronic conditions")
+    
     return results
 
 def generate_report(analysis_results, feature_dict):
     report = "BLOOD ANALYSIS REPORT\n\n"
+    
+    # For unhealthy patients (with conditions)
     if analysis_results['conditions']:
-        report += "Identified Conditions:\n"
+        # report += "Status: <span class='text-danger'>Requires Medical Attention</span>\n\n"
+        
+        report += "Possible Conditions:\n"
+        # Add conditions with red highlighting
         for condition in analysis_results['conditions']:
             report += f"• <span class='text-danger'>{condition}</span>\n"
-        report += "\nClinical Findings:\n"
+        
+        report += "\nDetailed Analysis:\n"
+        # Add findings with specific highlighting for medical terms
         for finding in analysis_results['findings']:
-            report += f"• <span class='text-danger'>{finding}</span>\n"
-        report += "\nTreatment Recommendations:\n"
+            # Highlight specific medical terms and values
+            finding = finding.replace("Low ", "<span class='text-danger'>Low</span> ")
+            finding = finding.replace("High ", "<span class='text-danger'>High</span> ")
+            finding = finding.replace("Elevated ", "<span class='text-danger'>Elevated</span> ")
+            finding = finding.replace("hemoglobin", "<span class='text-danger'>hemoglobin</span>")
+            finding = finding.replace("hematocrit", "<span class='text-danger'>hematocrit</span>")
+            finding = finding.replace("MCV", "<span class='text-danger'>MCV</span>")
+            finding = finding.replace("MCHC", "<span class='text-danger'>MCHC</span>")
+            finding = finding.replace("white blood cell count", "<span class='text-danger'>white blood cell count</span>")
+            finding = finding.replace("platelet count", "<span class='text-danger'>platelet count</span>")
+            finding = finding.replace("infection", "<span class='text-danger'>infection</span>")
+            finding = finding.replace("inflammation", "<span class='text-danger'>inflammation</span>")
+            report += f"• {finding}\n"
+        
+        report += "\nRecommended Actions:\n"
+        # Add treatments with key medical terms highlighted
         for treatment in analysis_results['treatments']:
+            # Highlight specific medical treatments and tests
+            treatment = treatment.replace("iron supplements", "<span class='text-danger'>iron supplements</span>")
+            treatment = treatment.replace("vitamin B12", "<span class='text-danger'>vitamin B12</span>")
+            treatment = treatment.replace("folic acid", "<span class='text-danger'>folic acid</span>")
+            treatment = treatment.replace("antibiotic therapy", "<span class='text-danger'>antibiotic therapy</span>")
+            treatment = treatment.replace("CBC", "<span class='text-danger'>CBC</span>")
+            treatment = treatment.replace("JAK2 mutation analysis", "<span class='text-danger'>JAK2 mutation analysis</span>")
+            treatment = treatment.replace("therapeutic phlebotomy", "<span class='text-danger'>therapeutic phlebotomy</span>")
             report += f"• {treatment}\n"
+    
+    # For healthy patients (no conditions)
     else:
-        report += "Identified Conditions:\n• <span class='text-success'>No abnormal conditions detected</span>\n\n"
-        report += "Clinical Findings:\n• <span class='text-success'>All blood parameters are within normal ranges</span>\n\n"
-        report += "Treatment Recommendations:\n• Maintain current health status\n• Continue regular exercise and balanced diet\n• Schedule routine follow-up in 12 months\n"
+        report += "Status: <span class='text-success'>Healthy</span>\n\n"
+        report += "Possible Conditions:\n"
+        report += "• <span class='text-success'>All blood parameters are within normal ranges</span>\n\n"
+        report += "Recommendations:\n"
+        report += "• Maintain current health status\n"
+        report += "• Continue regular exercise and balanced diet\n"
+        report += "• Schedule routine follow-up in 12 months\n"
+    
     return report
 
 @app.route('/predict', methods=['POST'])
@@ -201,13 +304,14 @@ def predict():
                 'SEX': [raw_feature_dict['Sex']]
             })
 
-            # Use the loaded label encoder and scaler to transform the data
-            new_data['SEX'] = label_encoder_sex.transform(new_data['SEX'])
+            # Scale data for prediction only
+            new_data_scaled = new_data.copy()
+            new_data_scaled['SEX'] = label_encoder_sex.transform(new_data_scaled['SEX'])
             numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
-                                'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
-            new_data[numeric_cols_new] = scaler.transform(new_data[numeric_cols_new])
+                              'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
+            new_data_scaled[numeric_cols_new] = scaler.transform(new_data_scaled[numeric_cols_new])
 
-            prediction = model.predict(new_data)[0]
+            prediction = model.predict(new_data_scaled)[0]
             print("Extracted Features:", features)
             print("Prediction:", prediction)
 
@@ -219,7 +323,7 @@ def predict():
 
             return jsonify({
                 "status": "success",
-                "prediction": "in" if prediction == 0 else "out",
+                "prediction": "incare" if prediction == 0 else "outcare",
                 "detailed_analysis": detailed_report
             })
 
@@ -237,51 +341,54 @@ def predict():
 def predict_manual():
     try:
         data = request.json
-
-        new_data = pd.DataFrame({
-            'HAEMATOCRIT': [float(data['Hematocrit'])],
-            'HAEMOGLOBINS': [float(data['Hemoglobin'])],
-            'ERYTHROCYTE': [float(data['Erythrocyte'])],
-            'LEUCOCYTE': [float(data['Leucocyte'])],
-            'THROMBOCYTE': [float(data['Thrombocyte'])],
-            'MCH': [float(data['Mch'])],
-            'MCHC': [float(data['Mchc'])],
-            'MCV': [float(data['Mcv'])],
-            'AGE': [float(data['Age'])],
-            'SEX': [data['Sex']]
-        })
-
-        # Use the loaded label encoder and scaler
-        new_data['SEX'] = label_encoder_sex.transform(new_data['SEX'])
-        numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
-                            'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
-        new_data[numeric_cols_new] = scaler.transform(new_data[numeric_cols_new])
-
-        prediction = model.predict(new_data)[0]
-        print("Manual Prediction:", prediction)
-
-        feature_dict = {
-            'Hematocrit': new_data['HAEMATOCRIT'].iloc[0],
-            'Hemoglobin': new_data['HAEMOGLOBINS'].iloc[0],
-            'Erythrocyte': new_data['ERYTHROCYTE'].iloc[0],
-            'Leucocyte': new_data['LEUCOCYTE'].iloc[0],
-            'Thrombocyte': new_data['THROMBOCYTE'].iloc[0],
-            'Mch': new_data['MCH'].iloc[0],
-            'Mchc': new_data['MCHC'].iloc[0],
-            'Mcv': new_data['MCV'].iloc[0],
-            'Age': new_data['AGE'].iloc[0],
-            'Sex': new_data['SEX'].iloc[0]
+        
+        # Store raw data for analysis
+        raw_feature_dict = {
+            'Hematocrit': float(data['Hematocrit']),
+            'Hemoglobin': float(data['Hemoglobin']),
+            'Erythrocyte': float(data['Erythrocyte']),
+            'Leucocyte': float(data['Leucocyte']),
+            'Thrombocyte': float(data['Thrombocyte']),
+            'Mch': float(data['Mch']),
+            'Mchc': float(data['Mchc']),
+            'Mcv': float(data['Mcv']),
+            'Age': float(data['Age']),
+            'Sex': data['Sex']
         }
 
+        # Create DataFrame for prediction
+        new_data = pd.DataFrame({
+            'HAEMATOCRIT': [raw_feature_dict['Hematocrit']],
+            'HAEMOGLOBINS': [raw_feature_dict['Hemoglobin']],
+            'ERYTHROCYTE': [raw_feature_dict['Erythrocyte']],
+            'LEUCOCYTE': [raw_feature_dict['Leucocyte']],
+            'THROMBOCYTE': [raw_feature_dict['Thrombocyte']],
+            'MCH': [raw_feature_dict['Mch']],
+            'MCHC': [raw_feature_dict['Mchc']],
+            'MCV': [raw_feature_dict['Mcv']],
+            'AGE': [raw_feature_dict['Age']],
+            'SEX': [raw_feature_dict['Sex']]
+        })
+
+        # Scale data for prediction only
+        new_data_scaled = new_data.copy()
+        new_data_scaled['SEX'] = label_encoder_sex.transform(new_data_scaled['SEX'])
+        numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
+                           'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
+        new_data_scaled[numeric_cols_new] = scaler.transform(new_data_scaled[numeric_cols_new])
+
+        prediction = model.predict(new_data_scaled)[0]
+        print("Manual Prediction:", prediction)
+
         if prediction == 0:
-            analysis = analyze_blood_report(feature_dict)
-            detailed_report = generate_report(analysis, feature_dict)
+            analysis = analyze_blood_report(raw_feature_dict)
+            detailed_report = generate_report(analysis, raw_feature_dict)
         else:
-            detailed_report = generate_report({"conditions": [], "findings": [], "treatments": []}, feature_dict)
+            detailed_report = generate_report({"conditions": [], "findings": [], "treatments": []}, raw_feature_dict)
 
         return jsonify({
             "status": "success",
-            "prediction": "in" if prediction == 0 else "out",
+            "prediction": "incare" if prediction == 0 else "outcare",
             "detailed_analysis": detailed_report
         })
 

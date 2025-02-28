@@ -26,6 +26,30 @@ function MainApp() {
     Sex: ''
   });
 
+  const MIN_VALUES = {
+    Hematocrit: 13.70,
+    Hemoglobin: 3.80,
+    Erythrocyte: 1.48,
+    Leucocyte: 1.10,
+    Thrombocyte: 8.00,
+    Mch: 14.90,
+    Mchc: 26.00,
+    Mcv: 54.00,
+    Age: 1.00
+  };
+
+  const MAX_VALUES = {
+    Hematocrit: 69.00,
+    Hemoglobin: 18.90,
+    Erythrocyte: 7.86,
+    Leucocyte: 76.60,
+    Thrombocyte: 1183.00,
+    Mch: 40.80,
+    Mchc: 39.00,
+    Mcv: 115.60,
+    Age: 99.00
+  };
+
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
@@ -106,10 +130,50 @@ function MainApp() {
   };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    // For Sex field, convert to uppercase immediately
+    if (name === 'Sex') {
+      setManualInputs(prev => ({
+        ...prev,
+        [name]: value.toUpperCase()
+      }));
+      return;
+    }
+
     setManualInputs(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+  };
+
+  const handleInputBlur = (e) => {
+    const { name, value } = e.target;
+    
+    if (!value) return; // Skip validation if empty
+
+    // Validate Sex field
+    if (name === 'Sex') {
+      const upperValue = value.toUpperCase();
+      if (!['M', 'F'].includes(upperValue)) {
+        alert('Please enter only M or F for Sex');
+        setManualInputs(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      }
+      return;
+    }
+
+    // Validate numeric fields
+    const numValue = parseFloat(value);
+    if (numValue < MIN_VALUES[name] || numValue > MAX_VALUES[name]) {
+      alert(`Please enter a value between ${MIN_VALUES[name]} and ${MAX_VALUES[name]} for ${name}`);
+      setManualInputs(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const typeContent = React.useCallback((content, index = 0) => {
@@ -313,9 +377,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Hematocrit"
-                      placeholder="e.g., 35.1"
+                      placeholder={`${MIN_VALUES.Hematocrit} - ${MAX_VALUES.Hematocrit}`}
                       value={manualInputs.Hematocrit}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Hematocrit')}
                       required
                     />
@@ -326,9 +391,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Hemoglobin"
-                      placeholder="e.g., 14.5"
+                      placeholder={`${MIN_VALUES.Hemoglobin} - ${MAX_VALUES.Hemoglobin}`}
                       value={manualInputs.Hemoglobin}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Hemoglobin')}
                       required
                     />
@@ -339,9 +405,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Erythrocyte"
-                      placeholder="e.g., 4.5"
+                      placeholder={`${MIN_VALUES.Erythrocyte} - ${MAX_VALUES.Erythrocyte}`}
                       value={manualInputs.Erythrocyte}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Erythrocyte')}
                       required
                     />
@@ -352,9 +419,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Leucocyte"
-                      placeholder="e.g., 10.5"
+                      placeholder={`${MIN_VALUES.Leucocyte} - ${MAX_VALUES.Leucocyte}`}
                       value={manualInputs.Leucocyte}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Leucocyte')}
                       required
                     />
@@ -365,9 +433,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Thrombocyte"
-                      placeholder="e.g., 250"
+                      placeholder={`${MIN_VALUES.Thrombocyte} - ${MAX_VALUES.Thrombocyte}`}
                       value={manualInputs.Thrombocyte}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Thrombocyte')}
                       required
                     />
@@ -378,9 +447,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Mch"
-                      placeholder="e.g., 32.5"
+                      placeholder={`${MIN_VALUES.Mch} - ${MAX_VALUES.Mch}`}
                       value={manualInputs.Mch}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Mch')}
                       required
                     />
@@ -391,9 +461,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Mchc"
-                      placeholder="e.g., 36.5"
+                      placeholder={`${MIN_VALUES.Mchc} - ${MAX_VALUES.Mchc}`}
                       value={manualInputs.Mchc}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Mchc')}
                       required
                     />
@@ -404,9 +475,10 @@ function MainApp() {
                       type="number"
                       step="0.1"
                       name="Mcv"
-                      placeholder="e.g., 80"
+                      placeholder={`${MIN_VALUES.Mcv} - ${MAX_VALUES.Mcv}`}
                       value={manualInputs.Mcv}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Mcv')}
                       required
                     />
@@ -417,22 +489,25 @@ function MainApp() {
                       type="number"
                       step="1"
                       name="Age"
-                      placeholder="e.g., 30"
+                      placeholder={`${MIN_VALUES.Age} - ${MAX_VALUES.Age}`}
                       value={manualInputs.Age}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Age')}
                       required
                     />
                   </div>
                   <div className="input-group">
-                    <label>Sex (1 for Male, 0 for Female)</label>
+                    <label>Sex (M for Male, F for Female)</label>
                     <input
                       type="text"
                       name="Sex"
-                      placeholder="M for Male, F for Female"
+                      placeholder="M or F"
                       value={manualInputs.Sex}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       onKeyPress={(e) => handleKeyPress(e, 'Sex')}
+                      maxLength="1"
                       required
                     />
                   </div>
