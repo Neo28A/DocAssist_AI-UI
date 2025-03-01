@@ -265,7 +265,7 @@ function MainApp() {
   return (
     <div className={`app ${theme}`}>
       <div className="header">
-        <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DocAssist AI</h1>
+        <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer', fontSize: '1.8rem' }}>DocAssist AI</h1>
         <div className="theme-switch-wrapper">
           <svg className="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="5" />
@@ -291,8 +291,8 @@ function MainApp() {
           </svg>
         </div>
       </div>
-      <div className="container">
-        <div className="input-section">
+      <div className="container" style={{ maxWidth: '1400px', width: '95%', margin: '0 auto' }}>
+        <div className="input-section" style={{ flex: '0 0 45%' }}>
           <div className="section-header">
             <button className="back-btn" onClick={handleBackClick}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -545,9 +545,9 @@ function MainApp() {
           )}
         </div>
 
-        <div className="result-section">
+        <div className="result-section" style={{ flex: '0 0 50%' }}>
           <div className="result-header">
-            <h2>Prediction</h2>
+            <h2 style={{ fontSize: '1.6rem' }}>Prediction</h2>
             {prediction && isContentFullyTyped && (
               <button 
                 className="download-button"
@@ -571,6 +571,7 @@ function MainApp() {
             <div className="prediction">
               <div 
                 className="prediction-text"
+                style={{ fontSize: '1.1rem', lineHeight: '1.6' }}
                 dangerouslySetInnerHTML={{ __html: displayedContent }}
               />
             </div>
