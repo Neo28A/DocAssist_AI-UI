@@ -50,9 +50,9 @@ function MainApp() {
     Age: 99.00
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+  // const toggleTheme = () => {
+  //   setTheme(theme === 'light' ? 'dark' : 'light');
+  // };
 
   const resetPrediction = () => {
     setPrediction(null);
@@ -564,7 +564,7 @@ function MainApp() {
           </div>
           {!prediction && (
             <p className="upload-message">
-              Upload a PDF and click "Analyze Report" to see the prediction.
+              Upload a PDF or enter values and click "Analyze Report" to see the prediction.
             </p>
           )}
           {prediction && prediction.status === 'success' && (
