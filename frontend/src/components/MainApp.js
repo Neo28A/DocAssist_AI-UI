@@ -50,9 +50,9 @@ function MainApp() {
     Age: 99.00
   };
 
-  // const toggleTheme = () => {
-  //   setTheme(theme === 'light' ? 'dark' : 'light');
-  // };
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
 
   const resetPrediction = () => {
     setPrediction(null);
