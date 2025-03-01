@@ -174,7 +174,7 @@ function MainApp() {
     // Validate numeric fields
     const numValue = parseFloat(value);
     if (numValue < MIN_VALUES[name] || numValue > MAX_VALUES[name]) {
-      alert(`Please enter a value between ${MIN_VALUES[name]} and ${MAX_VALUES[name]} for ${name}`);
+      alert(`Please enter a value between ${MIN_VALUES[name]} and ${MAX_VALUES.Age} for ${name}`);
       setManualInputs(prev => ({
         ...prev,
         [name]: ''
@@ -292,7 +292,7 @@ function MainApp() {
         </div>
       </div>
       <div className="container">
-        <div className="input-section">
+        <div className="input-section" style={{ minHeight: '800px' }}>
           <div className="section-header">
             <button className="back-btn" onClick={handleBackClick}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -545,7 +545,7 @@ function MainApp() {
           )}
         </div>
 
-        <div className="result-section">
+        <div className="result-section" style={{ minHeight: '800px' }}>
           <div className="result-header">
             <h2>Prediction</h2>
             {prediction && isContentFullyTyped && (
