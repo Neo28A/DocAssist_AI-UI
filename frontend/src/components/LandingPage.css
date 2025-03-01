@@ -97,14 +97,14 @@ html, body {
 }
 
 .hero-section {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
 .landing-title {
-  font-size: 4.5rem;
+  font-size: 5.5rem;
   line-height: 1.1;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   background: linear-gradient(to right, #ffffff, #007AFF);
   -webkit-background-clip: text;
   background-clip: text;
@@ -114,11 +114,11 @@ html, body {
 }
 
 .landing-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -188,9 +188,9 @@ html, body {
 .feature-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  padding: 2rem;
-  max-width: 1200px;
+  gap: 3rem;
+  padding: 3rem;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
@@ -199,7 +199,7 @@ html, body {
 .feature-card {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(0, 122, 255, 0.30);
-  padding: 2rem;
+  padding: 3rem;
   border-radius: 12px;
   text-align: center;
   display: flex;
@@ -252,26 +252,31 @@ html, body {
 
 @media (max-width: 1024px) {
   .landing-title {
-    font-size: 3.5rem;
+    font-size: 4rem;
   }
   
   .feature-cards {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 800px;
-  }
-  .features-section {
-    padding: 0.5rem 2rem;
+    max-width: 900px;
+    gap: 2rem;
+    padding: 2rem;
   }
 }
 
 @media (max-width: 768px) {
   .landing-title {
-    font-size: 2.5rem;
+    font-size: 3rem;
+  }
+  
+  .landing-content {
+    padding: 12rem 1rem 2rem;
   }
   
   .feature-cards {
     grid-template-columns: 1fr;
-    max-width: 400px;
+    max-width: 500px;
+    gap: 1.5rem;
+    padding: 1.5rem;
   }
   
   .button-group {
