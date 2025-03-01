@@ -265,7 +265,7 @@ function MainApp() {
   return (
     <div className={`app ${theme}`}>
       <div className="header">
-        <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer', fontSize: '1.8rem' }}>DocAssist AI</h1>
+        <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DocAssist AI</h1>
         <div className="theme-switch-wrapper">
           <svg className="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="5" />
@@ -291,24 +291,8 @@ function MainApp() {
           </svg>
         </div>
       </div>
-      <div className="container" style={{ 
-        maxWidth: '1400px', 
-        width: '95%', 
-        margin: '0 auto',
-        minHeight: 'calc(100vh - 120px)', // Subtract header height and some padding
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'stretch',
-        justifyContent: 'space-between',
-        paddingBottom: '2rem'
-      }}>
-        <div className="input-section" style={{ 
-          flex: '0 0 45%',
-          display: 'flex',
-          flexDirection: 'column',
-          height: 'auto',
-          minHeight: '500px'
-        }}>
+      <div className="container">
+        <div className="input-section">
           <div className="section-header">
             <button className="back-btn" onClick={handleBackClick}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -561,19 +545,9 @@ function MainApp() {
           )}
         </div>
 
-        <div className="result-section" style={{ 
-          flex: '0 0 50%',
-          display: 'flex',
-          flexDirection: 'column',
-          height: 'auto',
-          minHeight: '500px',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-          borderRadius: '8px',
-          padding: '1.5rem',
-          marginTop: '1rem'
-        }}>
+        <div className="result-section">
           <div className="result-header">
-            <h2 style={{ fontSize: '1.6rem' }}>Prediction</h2>
+            <h2>Prediction</h2>
             {prediction && isContentFullyTyped && (
               <button 
                 className="download-button"
@@ -589,14 +563,7 @@ function MainApp() {
             )}
           </div>
           {!prediction && (
-            <p className="upload-message" style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              opacity: '0.7',
-              fontSize: '1.1rem'
-            }}>
+            <p className="upload-message">
               Upload a PDF and click "Analyze Report" to see the prediction.
             </p>
           )}
@@ -604,7 +571,6 @@ function MainApp() {
             <div className="prediction">
               <div 
                 className="prediction-text"
-                style={{ fontSize: '1.1rem', lineHeight: '1.6' }}
                 dangerouslySetInnerHTML={{ __html: displayedContent }}
               />
             </div>
