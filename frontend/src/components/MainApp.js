@@ -54,10 +54,16 @@ function MainApp() {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const resetPrediction = () => {
     setPrediction(null);
     setIsTyping(false);
+    setIsContentFullyTyped(false);
+    setDisplayedContent('');
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    resetPrediction();
   };
 
   const handleSubmit = async (e) => {
@@ -246,6 +252,16 @@ function MainApp() {
     }
   };
 
+  const handleMethodSelection = (method) => {
+    resetPrediction();
+    setInputMethod(method);
+  };
+
+  const handleBackClick = () => {
+    resetPrediction();
+    setInputMethod(null);
+  };
+
   return (
     <div className={`app ${theme}`}>
       <div className="header">
@@ -278,26 +294,24 @@ function MainApp() {
       <div className="container">
         <div className="input-section">
           <div className="section-header">
-            <h2>Analysis Method</h2>
-            {inputMethod && (
-              <button className="back-btn" onClick={() => setInputMethod(null)}>
-                ← Back to Selection
-              </button>
-            )}
+            <button className="back-btn" onClick={handleBackClick}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <h2>{inputMethod === 'upload' ? 'Upload Blood Report' : 'Enter Blood Values'}</h2>
           </div>
           
           {!inputMethod && (
             <div className="method-selection">
-              <button className="method-btn" onClick={() => setInputMethod('upload')}>
+              <button className="method-btn" onClick={() => handleMethodSelection('upload')}>
                 <svg className="method-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                  <path d="M13 2v7h7" />
-                  <path d="M12 12v6" />
-                  <path d="M9 15l3-3 3 3" />
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                 </svg>
                 <span className="method-btn-text">Upload PDF Report</span>
               </button>
-              <button className="method-btn" onClick={() => setInputMethod('manual')}>
+              <button className="method-btn" onClick={() => handleMethodSelection('manual')}>
                 <svg className="method-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 5v14" />
                   <path d="M5 12h14" />

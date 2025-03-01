@@ -915,3 +915,149 @@ html, body {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }  */
+
+/* Add these responsive styles to your existing LandingPage.css */
+
+/* Improved mobile responsiveness for landing page */
+@media (max-width: 768px) {
+  .nav-bar {
+    width: 90%;
+    padding: 0 1rem;
+  }
+  
+  .nav-content {
+    justify-content: space-between;
+  }
+  
+  .nav-center {
+    display: none; /* Hide nav links on mobile */
+  }
+  
+  .landing-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .landing-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .landing-content {
+    padding: 8rem 1rem 2rem;
+  }
+  
+  .feature-cards {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .format-content {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+  
+  .format-text {
+    margin-right: 0;
+    text-align: center;
+    padding: 0;
+  }
+  
+  .format-image-container {
+    max-width: 100%;
+    padding: 0.8rem;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .footer-right {
+    flex-direction: column;
+    gap: 2rem;
+    margin-left: 0;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+/* Smaller mobile devices */
+@media (max-width: 480px) {
+  .nav-bar {
+    width: 95%;
+    top: 10px;
+  }
+  
+  .nav-brand-text {
+    font-size: 1rem;
+  }
+  
+  .get-started-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .get-started-btn, .learn-more-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .features-title, .format-title {
+    font-size: 1.8rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+  
+  .footer {
+    padding: 3rem 1rem 1rem;
+  }
+  
+  .footer-brand {
+    font-size: 1.2rem;
+  }
+  
+  .footer-social-links {
+    flex-wrap: wrap;
+  }
+  
+  .footer-social-links a {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Fix for the format section on mobile */
+@media (max-width: 768px) {
+  .format-section {
+    padding: 4rem 1rem;
+  }
+  
+  .format-description {
+    font-size: 1rem;
+  }
+}
+
+/* Improve footer on mobile */
+@media (max-width: 768px) {
+  .footer-divider {
+    width: 90%;
+    margin: 0 auto 2rem;
+  }
+  
+  .footer-bottom {
+    margin-top: 2rem;
+  }
+}

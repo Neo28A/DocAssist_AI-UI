@@ -3,10 +3,11 @@ from flask_cors import CORS
 import numpy as np
 from werkzeug.utils import secure_filename
 import os
-import PyPDF2
 import pickle
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, RobustScaler
+import pdfplumber  # Using pdfplumber for PDF extraction
+import re  # For regex extraction
 
 app = Flask(__name__)
 CORS(app)
@@ -18,17 +19,12 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load global objects (model, scaler, and label encoder)
-
-# ... existing imports ...
-
-# Update the model paths to point to the models folder
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 models_dir = os.path.join(backend_dir, "models")
 model_path = os.path.join(models_dir, "xgboost_model.sav")
 scaler_path = os.path.join(models_dir, "scaler.pkl")
 label_encoder_sex_path = os.path.join(models_dir, "label_encoder_sex.pkl")
 
-# Ensure models directory exists
 os.makedirs(models_dir, exist_ok=True)
 
 try:
@@ -43,88 +39,140 @@ except Exception as e:
     print(f"Error loading global objects: {str(e)}")
     model = None
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def extract_features_from_pdf(pdf_path):
-    with open(pdf_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
+    """
+    Extracts required features from a CBC report using pdfplumber.
+    This function extracts patient info (Age and Sex) and CBC test values based on
+    the provided report format. Expected tests and their labels:
+      - Hemoglobin              → "Hemoglobin"
+      - Leucocyte               → "Total Leukocyte Count"
+      - Thrombocyte             → "Platelet Count" (may include "(Thrombocyte)")
+      - Erythrocyte             → "Total RBC Count" (may include "(Erythrocyte)")
+      - Hematocrit              → "Hematocrit Value, Hct"
+      - Mcv                     → "Mean Corpuscular Volume, MCV"
+      - Mch                     → "Mean Cell Haemoglobin, MCH"
+      - Mchc                    → "Mean Cell Haemoglobin CON, MCHC"
+    """
+    with pdfplumber.open(pdf_path) as pdf:
         text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-    lines = text.split('\n')
-    header_line = None
-    data_line = None
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    
+    extracted_data = {}
+
+    # --- Extract Patient Info using regex ---
     for line in lines:
-        if "hematocrit" in line.lower() and "sex" in line.lower():
-            header_line = line
-        elif header_line and any(char.isdigit() for char in line):
-            data_line = line
+        if line.startswith("Age:"):
+            age_match = re.search(r"Age:\s*(\d+(\.\d+)?)", line)
+            if age_match:
+                extracted_data["Age"] = float(age_match.group(1))
+        if line.startswith("Sex:"):
+            sex_match = re.search(r"Sex:\s*([MF])", line, re.IGNORECASE)
+            if sex_match:
+                extracted_data["Sex"] = sex_match.group(1).upper()
+
+    # --- Extract CBC Test Values ---
+    cbc_mappings = {
+        'Hemoglobin': "Hemoglobin",
+        'Leucocyte': "Total Leukocyte Count",
+        'Thrombocyte': "Platelet Count",
+        'Erythrocyte': "Total RBC Count",
+        'Hematocrit': "Hematocrit Value, Hct",
+        'Mcv': "Mean Corpuscular Volume, MCV",
+        'Mch': "Mean Cell Haemoglobin, MCH",
+        'Mchc': "Mean Cell Haemoglobin CON, MCHC"
+    }
+    
+    # Locate the CBC section by finding "COMPLETE BLOOD COUNT"
+    start_index = None
+    for i, line in enumerate(lines):
+        if "COMPLETE BLOOD COUNT" in line.upper():
+            start_index = i
             break
-    if header_line and data_line:
-        headers = header_line.split()
-        values = data_line.split()
-        if len(headers) == len(values):
-            extracted_data = {}
-            for header, value in zip(headers, values):
-                extracted_data[header.upper()] = value
-            feature_mappings = {
-                'Hematocrit': ['HEMATOCRIT', 'HCT'],
-                'Hemoglobin': ['HEMOGLOBIN', 'HGB', 'HB'],
-                'Erythrocyte': ['ERYTHROCYTE', 'RBC'],
-                'Leucocyte': ['LEUCOCYTE', 'WBC'],
-                'Thrombocyte': ['THROMBOCYTE', 'PLT'],
-                'Mch': ['MCH'],
-                'Mchc': ['MCHC'],
-                'Mcv': ['MCV'],
-                'Age': ['AGE'],
-                'Sex': ['SEX']
-            }
-            features = []
-            normalized_data = {}
-            for feature, aliases in feature_mappings.items():
-                value = None
-                for alias in aliases:
-                    if alias in extracted_data:
-                        value = extracted_data[alias]
-                        # Special handling for Sex field
-                        if feature == 'Sex':
-                            # Convert numeric values to M/F
-                            if value in ['1', '1.0']:
-                                value = 'M'
-                            elif value in ['0', '0.0']:
-                                value = 'F'
-                            # Validate M/F values
-                            if value not in ['M', 'F']:
-                                raise ValueError(f"Invalid value for Sex: {value}. Must be M, F, 1, or 0")
-                            features.append(1 if value == 'M' else 0)  # Convert back to numeric for model
-                        else:
-                            try:
-                                features.append(float(value))
-                            except ValueError:
-                                raise ValueError(f"Invalid value for {feature}: {value}")
-                        normalized_data[feature] = value
+    if start_index is None:
+        raise ValueError("Could not locate CBC section in the report.")
+    
+    # Find the table header (e.g., a line containing "TEST")
+    table_start = None
+    for i in range(start_index, len(lines)):
+        if "TEST" in lines[i].upper():
+            table_start = i
+            break
+    if table_start is None:
+        raise ValueError("Could not locate CBC table header in the report.")
+    
+    # For each test, search for its numeric value.
+    for i in range(table_start + 1, len(lines)):
+        line = lines[i]
+        for feature, indicator in cbc_mappings.items():
+            if indicator.upper() in line.upper():
+                # First try to extract a numeric value from the same line.
+                number_match = re.search(r"(\d+(\.\d+)?)", line)
+                if number_match:
+                    extracted_data[feature] = float(number_match.group(1))
+                    continue  # Found the value, move to the next feature.
+                # If not found, then scan subsequent lines.
+                j = i + 1
+                value_found = None
+                while j < len(lines):
+                    try:
+                        candidate = lines[j].replace(",", "")
+                        value_candidate = float(candidate)
+                        value_found = value_candidate
                         break
-                if value is None:
-                    raise ValueError(f"Missing required feature: {feature}")
-            return features, normalized_data
-        else:
-            raise ValueError("Mismatch between header and data columns.")
-    else:
-        raise ValueError("Could not locate headers or data in the PDF.")
+                    except ValueError:
+                        j += 1
+                if value_found is not None:
+                    extracted_data[feature] = value_found
+                else:
+                    raise ValueError(f"Could not extract numeric value for {feature}")
+    
+    # --- Verify All Required Features ---
+    required_features = ['Hemoglobin', 'Leucocyte', 'Thrombocyte', 'Erythrocyte',
+                         'Hematocrit', 'Mcv', 'Mch', 'Mchc', 'Age', 'Sex']
+    for feat in required_features:
+        if feat not in extracted_data:
+            raise ValueError(f"Missing required feature: {feat}")
+    
+    # --- Process Sex Field ---
+    sex_val = extracted_data["Sex"]
+    if sex_val in ['1', '1.0']:
+        extracted_data["Sex"] = 'M'
+    elif sex_val in ['0', '0.0']:
+        extracted_data["Sex"] = 'F'
+    if extracted_data["Sex"] not in ['M', 'F']:
+        raise ValueError(f"Invalid value for Sex: {extracted_data['Sex']}. Must be M, F, 1, or 0")
+    
+    # Build the features list in the order required by the model.
+    features = [
+        extracted_data['Hematocrit'],
+        extracted_data['Hemoglobin'],
+        extracted_data['Erythrocyte'],
+        extracted_data['Leucocyte'],
+        extracted_data['Thrombocyte'],
+        extracted_data['Mch'],
+        extracted_data['Mchc'],
+        extracted_data['Mcv'],
+        extracted_data['Age'],
+        1 if extracted_data['Sex'] == 'M' else 0
+    ]
+    
+    return features, extracted_data
 
 def analyze_blood_report(features):
-    # Rule-based treatment recommendation system
     results = {
         'conditions': [],
         'findings': [],
         'treatments': []
     }
     
-    # Anemia evaluation
     if features['Hemoglobin'] < 12 and features['Hematocrit'] < 36:
-        # Microcytic anemia
         if features['Mcv'] < 80:
             results['conditions'].append("Microcytic Anemia")
             results['findings'].append("Low hemoglobin, hematocrit, and MCV suggest iron deficiency anemia")
@@ -133,7 +181,6 @@ def analyze_blood_report(features):
                 "Recommend dietary modifications to increase iron-rich foods",
                 "Schedule follow-up blood test in 3 months"
             ])
-        # Macrocytic anemia
         elif features['Mcv'] > 100:
             results['conditions'].append("Macrocytic Anemia")
             results['findings'].append("Low hemoglobin with high MCV suggests vitamin B12 or folate deficiency")
@@ -143,7 +190,6 @@ def analyze_blood_report(features):
                 "Provide dietary counseling for vitamin B12 and folate-rich foods"
             ])
         else:
-            # Normocytic anemia
             results['conditions'].append("Normocytic Anemia")
             results['findings'].append("Low hemoglobin and hematocrit with normal MCV may indicate acute blood loss or chronic disease")
             results['treatments'].extend([
@@ -151,7 +197,6 @@ def analyze_blood_report(features):
                 "Consider additional tests (iron studies, reticulocyte count, kidney function)"
             ])
     
-    # Leukocytosis evaluation
     if features['Leucocyte'] > 11:
         results['conditions'].append("Leukocytosis")
         results['findings'].append("Elevated white blood cell count indicates possible infection or inflammation")
@@ -161,7 +206,6 @@ def analyze_blood_report(features):
             "Consider initiating antibiotic therapy based on clinical findings"
         ])
     
-    # Thrombocytosis evaluation
     if features['Thrombocyte'] > 450:
         results['conditions'].append("Thrombocytosis")
         results['findings'].append("High platelet count may be reactive or suggest a myeloproliferative disorder")
@@ -170,7 +214,6 @@ def analyze_blood_report(features):
             "Evaluate for underlying causes; refer to hematology if persistent"
         ])
     
-    # Polycythemia evaluation
     if features['Hematocrit'] > 52 and features['Hemoglobin'] > 18:
         results['conditions'].append("Polycythemia")
         results['findings'].append("Elevated hemoglobin and hematocrit may indicate polycythemia vera or secondary polycythemia")
@@ -180,7 +223,6 @@ def analyze_blood_report(features):
             "Evaluate need for cytoreductive therapy (e.g., hydroxyurea) in selected cases"
         ])
     
-    # MCHC-based red cell evaluation
     if features['Mchc'] < 32:
         results['conditions'].append("Hypochromia")
         results['findings'].append("Low MCHC indicates reduced hemoglobin content per cell, common in iron deficiency anemia")
@@ -197,7 +239,6 @@ def analyze_blood_report(features):
             "Refer to hematology for further evaluation"
         ])
     
-    # Age-related note
     if features['Age'] > 65:
         results['findings'].append("Patient is elderly; consider age-related changes in blood parameters and higher risk for chronic conditions")
     
@@ -208,7 +249,7 @@ def generate_report(analysis_results, feature_dict):
     
     # For unhealthy patients (with conditions)
     if analysis_results['conditions']:
-        # report += "Status: <span class='text-danger'>Requires Medical Attention</span>\n\n"
+        report += "Status: <span class='text-danger'>Requires Medical Attention</span>\n\n"
         
         report += "Possible Conditions:\n"
         # Add conditions with red highlighting
@@ -230,6 +271,15 @@ def generate_report(analysis_results, feature_dict):
             finding = finding.replace("platelet count", "<span class='text-danger'>platelet count</span>")
             finding = finding.replace("infection", "<span class='text-danger'>infection</span>")
             finding = finding.replace("inflammation", "<span class='text-danger'>inflammation</span>")
+            finding = finding.replace("iron deficiency", "<span class='text-danger'>iron deficiency</span>")
+            finding = finding.replace("vitamin B12", "<span class='text-danger'>vitamin B12</span>")
+            finding = finding.replace("folate deficiency", "<span class='text-danger'>folate deficiency</span>")
+            finding = finding.replace("acute blood loss", "<span class='text-danger'>acute blood loss</span>")
+            finding = finding.replace("chronic disease", "<span class='text-danger'>chronic disease</span>")
+            finding = finding.replace("myeloproliferative", "<span class='text-danger'>myeloproliferative</span>")
+            finding = finding.replace("polycythemia vera", "<span class='text-danger'>polycythemia vera</span>")
+            finding = finding.replace("secondary polycythemia", "<span class='text-danger'>secondary polycythemia</span>")
+            finding = finding.replace("hereditary spherocytosis", "<span class='text-danger'>hereditary spherocytosis</span>")
             report += f"• {finding}\n"
         
         report += "\nRecommended Actions:\n"
@@ -237,12 +287,20 @@ def generate_report(analysis_results, feature_dict):
         for treatment in analysis_results['treatments']:
             # Highlight specific medical treatments and tests
             treatment = treatment.replace("iron supplements", "<span class='text-danger'>iron supplements</span>")
+            treatment = treatment.replace("ferrous sulfate", "<span class='text-danger'>ferrous sulfate</span>")
             treatment = treatment.replace("vitamin B12", "<span class='text-danger'>vitamin B12</span>")
             treatment = treatment.replace("folic acid", "<span class='text-danger'>folic acid</span>")
             treatment = treatment.replace("antibiotic therapy", "<span class='text-danger'>antibiotic therapy</span>")
             treatment = treatment.replace("CBC", "<span class='text-danger'>CBC</span>")
             treatment = treatment.replace("JAK2 mutation analysis", "<span class='text-danger'>JAK2 mutation analysis</span>")
             treatment = treatment.replace("therapeutic phlebotomy", "<span class='text-danger'>therapeutic phlebotomy</span>")
+            treatment = treatment.replace("cytoreductive therapy", "<span class='text-danger'>cytoreductive therapy</span>")
+            treatment = treatment.replace("hydroxyurea", "<span class='text-danger'>hydroxyurea</span>")
+            treatment = treatment.replace("iron studies", "<span class='text-danger'>iron studies</span>")
+            treatment = treatment.replace("reticulocyte count", "<span class='text-danger'>reticulocyte count</span>")
+            treatment = treatment.replace("kidney function", "<span class='text-danger'>kidney function</span>")
+            treatment = treatment.replace("osmotic fragility testing", "<span class='text-danger'>osmotic fragility testing</span>")
+            treatment = treatment.replace("inflammatory markers", "<span class='text-danger'>inflammatory markers</span>")
             report += f"• {treatment}\n"
     
     # For healthy patients (no conditions)
@@ -252,8 +310,48 @@ def generate_report(analysis_results, feature_dict):
         report += "• <span class='text-success'>All blood parameters are within normal ranges</span>\n\n"
         report += "Recommendations:\n"
         report += "• Maintain current health status\n"
-        report += "• Continue regular exercise and balanced diet\n"
-        report += "• Schedule routine follow-up in 12 months\n"
+        report += "• Continue regular <span class='text-success'>exercise</span> and <span class='text-success'>balanced diet</span>\n"
+        report += "• Schedule routine follow-up in <span class='text-success'>12 months</span>\n"
+    
+    # Add a summary of blood parameters with highlighting for abnormal values
+    # report += "\nBlood Parameters:\n"
+    
+    # # Define normal ranges for highlighting
+    # normal_ranges = {
+    #     'Hemoglobin': {'min': 12, 'max': 18, 'unit': 'g/dL'},
+    #     'Hematocrit': {'min': 36, 'max': 52, 'unit': '%'},
+    #     'Erythrocyte': {'min': 4, 'max': 6, 'unit': 'M/µL'},
+    #     'Leucocyte': {'min': 4, 'max': 11, 'unit': 'K/µL'},
+    #     'Thrombocyte': {'min': 150, 'max': 450, 'unit': 'K/µL'},
+    #     'Mch': {'min': 27, 'max': 32, 'unit': 'pg'},
+    #     'Mchc': {'min': 32, 'max': 36, 'unit': 'g/dL'},
+    #     'Mcv': {'min': 80, 'max': 100, 'unit': 'fL'}
+    # }
+    
+    # Add each parameter with appropriate highlighting
+    # for param, range_info in normal_ranges.items():
+    #     value = feature_dict[param]
+    #     unit = range_info['unit']
+    #     normal_range = f"{range_info['min']}-{range_info['max']} {unit}"
+        
+    #     if value < range_info['min'] or value > range_info['max']:
+    #         # Abnormal value
+    #         value_str = f"<span class='text-danger'>{value} {unit}</span>"
+    #         if value < range_info['min']:
+    #             status = "<span class='text-danger'>(Low)</span>"
+    #         else:
+    #             status = "<span class='text-danger'>(High)</span>"
+    #     else:
+    #         # Normal value
+    #         value_str = f"{value} {unit}"
+    #         status = "<span class='text-success'>(Normal)</span>"
+            
+    #     report += f"• {param}: {value_str} {status} [Normal range: {normal_range}]\n"
+    
+    # Add patient info
+    report += f"\nPatient Info:\n"
+    report += f"• Age: {feature_dict['Age']} years\n"
+    report += f"• Sex: {feature_dict['Sex']}\n"
     
     return report
 
@@ -275,22 +373,22 @@ def predict():
         file.save(filepath)
 
         try:
+            # Extract features using the new pdfplumber-based function.
             features, extracted_values = extract_features_from_pdf(filepath)
-            # Create a raw feature dictionary for report generation
+            
             raw_feature_dict = {
-                'Hematocrit': float(features[0]),
-                'Hemoglobin': float(features[1]),
-                'Erythrocyte': float(features[2]),
-                'Leucocyte': float(features[3]),
-                'Thrombocyte': float(features[4]),
-                'Mch': float(features[5]),
-                'Mchc': float(features[6]),
-                'Mcv': float(features[7]),
-                'Age': float(features[8]),
+                'Hematocrit': float(extracted_values['Hematocrit']),
+                'Hemoglobin': float(extracted_values['Hemoglobin']),
+                'Erythrocyte': float(extracted_values['Erythrocyte']),
+                'Leucocyte': float(extracted_values['Leucocyte']),
+                'Thrombocyte': float(extracted_values['Thrombocyte']),
+                'Mch': float(extracted_values['Mch']),
+                'Mchc': float(extracted_values['Mchc']),
+                'Mcv': float(extracted_values['Mcv']),
+                'Age': float(extracted_values['Age']),
                 'Sex': extracted_values['Sex']
             }
 
-            # Prepare a DataFrame for prediction
             new_data = pd.DataFrame({
                 'HAEMATOCRIT': [raw_feature_dict['Hematocrit']],
                 'HAEMOGLOBINS': [raw_feature_dict['Hemoglobin']],
@@ -304,12 +402,11 @@ def predict():
                 'SEX': [raw_feature_dict['Sex']]
             })
 
-            # Scale data for prediction only
             new_data_scaled = new_data.copy()
             new_data_scaled['SEX'] = label_encoder_sex.transform(new_data_scaled['SEX'])
-            numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
+            numeric_cols = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
                               'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
-            new_data_scaled[numeric_cols_new] = scaler.transform(new_data_scaled[numeric_cols_new])
+            new_data_scaled[numeric_cols] = scaler.transform(new_data_scaled[numeric_cols])
 
             prediction = model.predict(new_data_scaled)[0]
             print("Extracted Features:", features)
@@ -341,8 +438,6 @@ def predict():
 def predict_manual():
     try:
         data = request.json
-        
-        # Store raw data for analysis
         raw_feature_dict = {
             'Hematocrit': float(data['Hematocrit']),
             'Hemoglobin': float(data['Hemoglobin']),
@@ -356,7 +451,6 @@ def predict_manual():
             'Sex': data['Sex']
         }
 
-        # Create DataFrame for prediction
         new_data = pd.DataFrame({
             'HAEMATOCRIT': [raw_feature_dict['Hematocrit']],
             'HAEMOGLOBINS': [raw_feature_dict['Hemoglobin']],
@@ -370,12 +464,11 @@ def predict_manual():
             'SEX': [raw_feature_dict['Sex']]
         })
 
-        # Scale data for prediction only
         new_data_scaled = new_data.copy()
         new_data_scaled['SEX'] = label_encoder_sex.transform(new_data_scaled['SEX'])
-        numeric_cols_new = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
+        numeric_cols = ['HAEMATOCRIT', 'HAEMOGLOBINS', 'ERYTHROCYTE', 'LEUCOCYTE',
                            'THROMBOCYTE', 'MCH', 'MCHC', 'MCV', 'AGE']
-        new_data_scaled[numeric_cols_new] = scaler.transform(new_data_scaled[numeric_cols_new])
+        new_data_scaled[numeric_cols] = scaler.transform(new_data_scaled[numeric_cols])
 
         prediction = model.predict(new_data_scaled)[0]
         print("Manual Prediction:", prediction)
