@@ -2,18 +2,9 @@
 
 ## Overview
 
-DocAssist is an AI-powered medical decision support system designed to assist doctors in making informed treatment decisions by analyzing patient data, including medical history, symptoms, and lab results. The system leverages machine learning to provide personalized treatment recommendations, reducing variability in medical decision-making and improving patient outcomes.
-
-
-## Objectives
-
-- Develop an intelligent medical decision support system.
-- Analyze patient data to assist doctors in choosing the best treatment options.
-- Leverage machine learning for personalized treatment recommendations.
-
 # DocAssist AI-UI
 
-DocAssist AI-UI is the user interface for the **DocAssist** project, designed to assist doctors in analyzing blood reports using AI-driven insights. This UI allows users to upload PDF or CSV files of blood test results for automatic processing and interpretation.
+DocAssist AI-UI is the user interface for the **DocAssist** project, designed to assist doctors in analyzing blood reports using AI-driven insights. This UI allows users to upload PDF or Enter Values of blood test results for automatic processing and interpretation.
 
 ## Features
 - Upload blood test reports in **PDF** format.
