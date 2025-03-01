@@ -10,6 +10,16 @@ DocAssist AI-UI is the user interface for the **DocAssist** project, designed to
 - Visual representation of test results.
 - Secure and efficient processing.
 
+## UI Snapshots
+### Main Page
+![Main page](https://github.com/user-attachments/assets/2c9c1f29-cff0-42d2-8c4e-abb4a4640fe0)
+
+### Upload PDF Section
+![Upload pdf section](https://github.com/user-attachments/assets/7f2676ce-8104-4316-ab48-2b30ce6fa402)
+
+### Enter Values Section
+![Enter values Section](https://github.com/user-attachments/assets/e0cfe564-5b14-4f53-81c5-c711ca356d03)
+
 ## Installation
 **Note:** In `MainApp.js`, update the backend server URL to use the local server: `http://127.0.0.1:5000/` instead of the live backend server.
 To run the project locally, follow these steps:
