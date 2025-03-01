@@ -11,7 +11,7 @@ DocAssist AI-UI is the user interface for the **DocAssist** project, designed to
 - Secure and efficient processing.
 
 ## Installation
-**Note:** In `frontend/MainApp.js`, update the backend server URL to use the local server: `http://127.0.0.1:5000/` instead of the live backend server.
+**Note:** In `MainApp.js`, update the backend server URL to use the local server: `http://127.0.0.1:5000/` instead of the live backend server.
 To run the project locally, follow these steps:
 
 ### Prerequisites
@@ -25,7 +25,6 @@ Ensure you have the following installed:
 1. Clone the repository:
    ```sh
    git clone https://github.com/Neo28A/DocAssist_AI-UI.git
-   cd DocAssist_AI-UI
    ```
 2. Navigate to the frontend directory:
    ```sh
