@@ -1,9 +1,6 @@
 # DocAssist: AI-Powered Medical Decision Support System
 
 ## Overview
-
-# DocAssist AI-UI
-
 DocAssist AI-UI is the user interface for the **DocAssist** project, designed to assist doctors in analyzing blood reports using AI-driven insights. This UI allows users to upload PDF or Enter Values of blood test results for automatic processing and interpretation.
 
 ## Features
