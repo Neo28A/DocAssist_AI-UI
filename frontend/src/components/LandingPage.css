@@ -92,19 +92,19 @@ html, body {
   flex-direction: column;
   align-items: center;
   min-height: auto;
-  padding: 18rem 2rem 4rem;
+  padding: 16rem 2rem 4rem;
   text-align: center;
 }
 
 .hero-section {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .landing-title {
-  font-size: 5.5rem;
+  font-size: 5rem;
   line-height: 1.1;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
   background: linear-gradient(to right, #ffffff, #007AFF);
   -webkit-background-clip: text;
   background-clip: text;
@@ -114,11 +114,11 @@ html, body {
 }
 
 .landing-subtitle {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 3rem;
+  margin-bottom: 2.75rem;
   line-height: 1.6;
-  max-width: 700px;
+  max-width: 650px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -188,9 +188,9 @@ html, body {
 .feature-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
-  padding: 3rem;
-  max-width: 1400px;
+  gap: 2.5rem;
+  padding: 2.5rem;
+  max-width: 1300px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
@@ -199,7 +199,7 @@ html, body {
 .feature-card {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(0, 122, 255, 0.30);
-  padding: 3rem;
+  padding: 2.5rem;
   border-radius: 12px;
   text-align: center;
   display: flex;
@@ -252,12 +252,12 @@ html, body {
 
 @media (max-width: 1024px) {
   .landing-title {
-    font-size: 4rem;
+    font-size: 3.75rem;
   }
   
   .feature-cards {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 900px;
+    max-width: 850px;
     gap: 2rem;
     padding: 2rem;
   }
@@ -265,16 +265,16 @@ html, body {
 
 @media (max-width: 768px) {
   .landing-title {
-    font-size: 3rem;
+    font-size: 2.75rem;
   }
   
   .landing-content {
-    padding: 12rem 1rem 2rem;
+    padding: 10rem 1rem 2rem;
   }
   
   .feature-cards {
     grid-template-columns: 1fr;
-    max-width: 500px;
+    max-width: 450px;
     gap: 1.5rem;
     padding: 1.5rem;
   }
