@@ -75,14 +75,8 @@ Contributions are welcome! To contribute:
 4. Push to the branch (`git push origin feature-name`).
 5. Open a pull request.
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Contact
 For any questions or suggestions, feel free to reach out!
-
-- **GitHub:** [Neo28A](https://github.com/Neo28A)
-- **Email:** (Your email here)
 
 
 
